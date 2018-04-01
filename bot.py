@@ -34,7 +34,8 @@ class Bot(zirc.Client):
                 'domain': 'github.com',
                 'user': issue.split('/')[3],
                 'repo': issue.split('/')[4],
-                'issue': issue.split('/')[6].split('#')[0]
+                'issue': issue.split('/')[6].split('#')[0],
+                'url': True
             }
         elif re.match(r'^\S+\.\S+/\S+/\S+#\d+$', issue):
             return {
@@ -96,7 +97,8 @@ class Bot(zirc.Client):
         if data['state'] == 'closed':
             msg.append('and closed by \x02{0}\x02 at \x02{1}\x02'.format(
                 self.nohl(data['closed_by']['login']), data['closed_at']))
-        msg.append('- {0}'.format(self.gitio(data['html_url'])))
+        if not issue.get('url'):
+            msg.append('- {0}'.format(self.gitio(data['html_url'])))
         return ' '.join(msg)
 
     def nohl(self, string):
