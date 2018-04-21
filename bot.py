@@ -86,9 +86,10 @@ class Bot(zirc.Client):
             status = '\x0309OPEN\x0f'
         else:
             status = '\x0304CLOSED\x0f'
+        reponame = '/'.join([self.nohl(i)
+                             for i in data['repository_url'].split('/')[-2:]])
         msg = []
-        msg.append('[\x02{0}\x02]'.format(
-            '/'.join(data['repository_url'].split('/')[-2:])))
+        msg.append('[\x02{0}\x02]'.format(reponame))
         msg.append('({0}) {1} \x02#{2}\x02: {3} opened by \x02{4}\x02 at '
                    '\x02{5}\x02'.format(status, issuetype, data['number'],
                                         repr(data['title']),
