@@ -17,6 +17,7 @@ class Bot(zirc.Client):
         self.start()
 
     def get_config(self, channel, key=None, default=None):
+        channel = channel.lower()
         config = copy.deepcopy(self.config['chancfg'].get('default', {}))
         config.update(self.config['chancfg'].get(channel, {}))
         if key:
