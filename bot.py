@@ -98,7 +98,7 @@ class Bot(zirc.Client):
                                         data['created_at']))
         if data['state'] == 'closed':
             msg.append('and closed by \x02{0}\x02 at \x02{1}\x02'.format(
-                self.nohl(data.get('closed_by', {'login': 'ghost'})['login']),
+                self.nohl((data['closed_by'] or {'login': 'ghost'})['login']),
                 data['closed_at']))
         if not issue.get('url'):
             msg.append('- {0}'.format(self.gitio(data['html_url'])))
