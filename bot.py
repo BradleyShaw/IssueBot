@@ -1,5 +1,7 @@
+import signal
 import copy
 import ssl
+import os
 import re
 
 import requests
@@ -126,6 +128,9 @@ class Bot(zirc.Client):
                 msg = self.github(issue)
                 if msg:
                     irc.reply(event, msg)
+
+    def on_error(self, event, irc):
+        os.kill(os.getpid(), signal.SIGINT)
 
 
 if __name__ == '__main__':
