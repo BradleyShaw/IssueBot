@@ -118,6 +118,8 @@ class Bot(zirc.Client):
     def on_privmsg(self, event, irc):
         if event.target == self._config['nickname']:  # Ignore PMs
             return
+        if len(event.arguments) == 0: # Ignore empty messages
+            return
         issues = []
         for part in event.arguments[0].split(' '):
             issue = self.parse_issue(event.target, part)
