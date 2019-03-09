@@ -1,3 +1,4 @@
+from datetime import datetime
 import signal
 import copy
 import ssl
@@ -8,6 +9,7 @@ import requests
 import zirc
 
 from config import config
+import utils
 
 
 class Bot(zirc.Client):
@@ -89,19 +91,22 @@ class Bot(zirc.Client):
             status = '\x0309OPEN\x0f'
         else:
             status = '\x0304CLOSED\x0f'
+        date_format = '%Y-%m-%dT%H:%M:%SZ'
+        created_at = datetime.strptime(data['created_at'], date_format)
         reponame = '/'.join([self.nohl(i)
                              for i in data['repository_url'].split('/')[-2:]])
         msg = []
         msg.append('[\x02{0}\x02]'.format(reponame))
-        msg.append('({0}) {1} \x02#{2}\x02: {3} opened by \x02{4}\x02 at '
-                   '\x02{5}\x02'.format(status, issuetype, data['number'],
-                                        repr(data['title']),
-                                        self.nohl(data['user']['login']),
-                                        data['created_at']))
+        msg.append('({0}) {1} \x02#{2}\x02: {3} opened by \x02{4}\x02 '
+                   '{5} ago'.format(status, issuetype, data['number'],
+                                    repr(data['title']),
+                                    self.nohl(data['user']['login']),
+                                    utils.timesince(created_at)))
         if data['state'] == 'closed':
-            msg.append('and closed by \x02{0}\x02 at \x02{1}\x02'.format(
+            closed_at = datetime.strptime(data['closed_at'], date_format)
+            msg.append('and closed by \x02{0}\x02 {1} ago'.format(
                 self.nohl((data['closed_by'] or {'login': 'ghost'})['login']),
-                data['closed_at']))
+                utils.timesince(closed_at)))
         if not issue.get('url'):
             msg.append('- {0}'.format(self.gitio(data['html_url'])))
         return ' '.join(msg)
@@ -118,7 +123,7 @@ class Bot(zirc.Client):
     def on_privmsg(self, event, irc):
         if event.target == self._config['nickname']:  # Ignore PMs
             return
-        if len(event.arguments) == 0: # Ignore empty messages
+        if len(event.arguments) == 0:  # Ignore empty messages
             return
         issues = []
         for part in event.arguments[0].split(' '):
