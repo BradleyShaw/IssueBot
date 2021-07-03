@@ -1,8 +1,2 @@
-certifi==2018.10.15
-chardet==3.0.4
-idna==2.7
-PySocks==1.6.8
-requests==2.20.1
-six==1.11.0
-urllib3==1.24.1
+requests==2.25.1
 zirc==1.2.10
