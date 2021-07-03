@@ -83,21 +83,30 @@ class Bot(zirc.Client):
         data = data.json()
         if data.get('message'):  # Something went wrong :(
             return
+        reponame = '/'.join(
+            [self.nohl(i) for i in data['repository_url'].split('/')[-2:]])
         if data.get('pull_request'):
             issuetype = 'Pull Request'
+            data = requests.get(
+                'https://api.github.com/repos/{0}/{1}/pulls/{2}'.format(
+                    issue['user'], issue['repo'], issue['issue']),
+                auth=tuple(self.config['auth']['github']))
+            data = data.json()
+            if data['state'] == 'closed' and data.get('merged'):
+                data['state'] = 'merged'
         else:
             issuetype = 'Issue'
         if data['state'] == 'open':
             status = '\x0309OPEN\x0f'
+        elif data['state'] == 'merged':
+            status = '\x0306MERGED\x0f'
         else:
             status = '\x0304CLOSED\x0f'
         date_format = '%Y-%m-%dT%H:%M:%SZ'
         created_at = datetime.strptime(data['created_at'], date_format)
-        reponame = '/'.join([self.nohl(i)
-                             for i in data['repository_url'].split('/')[-2:]])
         msg = []
         msg.append('[\x02{0}\x02]'.format(reponame))
-        msg.append('({0}) {1} \x02#{2}\x02: {3} opened by \x02{4}\x02 '
+        msg.append('(\x02{0}) {1} \x02#{2}\x02: {3} opened by \x02{4}\x02 '
                    '{5} ago'.format(status, issuetype, data['number'],
                                     repr(data['title']),
                                     self.nohl(data['user']['login']),
@@ -107,6 +116,11 @@ class Bot(zirc.Client):
             msg.append('and closed by \x02{0}\x02 {1} ago'.format(
                 self.nohl((data['closed_by'] or {'login': 'ghost'})['login']),
                 utils.timesince(closed_at)))
+        elif data['state'] == 'merged':
+            merged_at = datetime.strptime(data['merged_at'], date_format)
+            msg.append('and merged by \x02{0}\x02 {1} ago'.format(
+                self.nohl((data['merged_by'] or {'login': 'ghost'})['login']),
+                utils.timesince(merged_at)))
         if not issue.get('url'):
             msg.append('- {0}'.format(self.gitio(data['html_url'])))
         return ' '.join(msg)
